@@ -1,0 +1,12 @@
+.venv/
+third_party/
+obj_dir/
+obj_dma/
+openlane/runs/
+sw/fw.elf
+sw/fw.bin
+sw/fw.hex
+*.vcd
+*.log
+sim_*
+*.bak

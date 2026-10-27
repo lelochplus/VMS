@@ -1,0 +1,12 @@
+{
+  "DESIGN_NAME": "soc_core",
+  "VERILOG_FILES": [
+    "dir::../rtl/soc_core.v",
+    "dir::../rtl/soc_periph.v",
+    "dir::../rtl/dma_ctrl.v",
+    "dir::../third_party/picorv32/picorv32.v"
+  ],
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 25,
+  "PDK": "sky130A"
+}

@@ -1,0 +1,7 @@
+{
+  "DESIGN_NAME": "dma_ctrl",
+  "VERILOG_FILES": "dir::../rtl/dma_ctrl.v",
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 20,
+  "PDK": "sky130A"
+}
