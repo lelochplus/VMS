@@ -59,9 +59,9 @@ module dma_ctrl (
             s_ack <= s_cyc & s_stb & ~s_ack;
 
             if (cfg_wr) case (s_adr)
-                3'd0: begin
+                3'd0: if (!busy) begin   // khoa CTRL khi dang truyen, nhu SRC/DST/LEN
                     irq_en <= s_dat_i[1]; src_inc <= s_dat_i[2]; dst_inc <= s_dat_i[3];
-                    if (s_dat_i[0] && !busy && len != 0) begin
+                    if (s_dat_i[0] && len != 0) begin
                         busy <= 1; done <= 0; err <= 0; st <= RD_REQ;
                     end
                 end

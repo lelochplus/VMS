@@ -25,7 +25,7 @@ sim-dma: rtl/dma_ctrl.v tb/tb_dma.v
 > ./obj_dma/Vtb_dma | tee dma.log
 > grep -q "^PASS" dma.log
 
-test: sim-dma sim-soc
+test: lint sim-dma sim-soc
 > @echo "== TAT CA TEST DAT =="
 
 clean:
@@ -49,3 +49,9 @@ prog: fpga/soc.fs
 
 .PHONY: all sim-soc sim-dma test clean fpga prog
 
+
+lint:
+> verilator --lint-only -Wall --top-module soc_top lint.vlt $(RTL)
+> @echo "== LINT SACH =="
+
+.PHONY: lint

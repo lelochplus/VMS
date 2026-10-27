@@ -249,6 +249,37 @@ module tb_dma;
         cfg_read(R_DST, r); expect_eq("T9 DST", r, 32'h200);
         clear_status;
 
+        $display("T10: ghi CTRL khi dang BUSY phai bi bo qua");
+        max_lat = 6; init_mem;
+        cfg_write(R_SRC, 32'h000);
+        cfg_write(R_DST, 32'h200);
+        cfg_write(R_LEN, 16);
+        cfg_write(R_CTRL, 32'hD);               // START | SRC_INC | DST_INC, IRQ_EN = 0
+        cfg_write(R_CTRL, 32'h3);               // START | IRQ_EN, tat INC: phai bi bo qua
+        cfg_read(R_CTRL, r); expect_eq("T10 CTRL doc lai", r, 32'hC);
+        wait_idle;
+        expect_eq("T10 status", last_st, ST_DONE);
+        check_copy("T10 du lieu", 0, 128, 16);
+        expect_eq("T10 irq (IRQ_EN van 0)", {31'd0, irq}, 0);
+        cfg_read(R_DST, r); expect_eq("T10 DST", r, 32'h240);
+        // giu DONE de T11 kiem START xoa co cu
+
+        $display("T11: hai lenh START lien tiep, lenh thu hai bi bo qua");
+        max_lat = 2; init_mem;
+        cfg_write(R_SRC, 32'h000);
+        cfg_write(R_DST, 32'h200);
+        cfg_write(R_LEN, 8);
+        cfg_write(R_CTRL, 32'hD);
+        cfg_write(R_CTRL, 32'hD);               // START lan 2 khi dang BUSY
+        cfg_read(R_STATUS, r); expect_eq("T11 START xoa DONE cu", r, ST_BUSY);
+        wait_idle;
+        expect_eq("T11 status", last_st, ST_DONE);
+        check_copy("T11 du lieu", 0, 128, 8);
+        expect_eq("T11 khong ghi lan", mem[136], 0);
+        cfg_read(R_DST, r); expect_eq("T11 DST", r, 32'h220);
+        cfg_read(R_LEN, r); expect_eq("T11 LEN", r, 0);
+        clear_status;
+
         if (errors == 0) $display("PASS: tat ca test dat");
         else             $display("FAIL: %0d loi", errors);
         $finish;
