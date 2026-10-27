@@ -24,7 +24,10 @@ module wb_ram #(
     integer i;
 
     initial begin
+        // Chỉ xóa 0 trong mô phỏng: Yosys 0.70 bỏ dữ liệu $readmemh nếu cùng khối initial có vòng xóa này
+`ifndef SYNTHESIS
         for (i = 0; i < WORDS; i = i + 1) begin m0[i] = 0; m1[i] = 0; m2[i] = 0; m3[i] = 0; end
+`endif
         if (INIT_FILE != "") begin
             $readmemh({INIT_FILE, "0.hex"}, m0);
             $readmemh({INIT_FILE, "1.hex"}, m1);
