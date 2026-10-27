@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 // SoC đầy đủ để mô phỏng: lõi soc_core + RAM
 module soc_top #(
     parameter RAM_WORDS = 1024,        // 1024 word = 4 KB

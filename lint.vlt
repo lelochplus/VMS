@@ -1,0 +1,5 @@
+`verilator_config
+lint_off -rule PINCONNECTEMPTY -file "*rtl/soc_core.v"
+lint_off -rule DECLFILENAME -file "*rtl/soc_periph.v"
+lint_off -rule UNUSEDSIGNAL -file "*rtl/soc_periph.v" -match "*'adr'*"
+lint_off -rule UNUSEDSIGNAL -file "*rtl/soc_periph.v" -match "*'dat_i'*"

@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 // Lõi SoC (không RAM): PicoRV32 (Wishbone) + RAM + UART TX + DMA, hai master dùng chung bus qua arbiter
 // Bản đồ bộ nhớ:
 //   0x0000_0000  RAM (code + dữ liệu)

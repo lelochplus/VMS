@@ -8,7 +8,7 @@ module tb_soc;
 
     wire uart_tx, trap;
 
-    soc_top #(.RAM_WORDS(1024), .CLK_DIV(CLK_DIV), .FW_HEX("sw/fw.hex")) dut (
+    soc_top #(.RAM_WORDS(1024), .CLK_DIV(CLK_DIV), .FW_HEX("sw/fw")) dut (
         .clk(clk), .rst(rst), .uart_tx(uart_tx), .trap(trap)
     );
 

@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module dma_ctrl (
     input  wire        clk, rst,
     // Wishbone slave: CPU cấu hình

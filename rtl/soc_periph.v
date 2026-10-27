@@ -1,4 +1,8 @@
-// RAM Wishbone, hỗ trợ ghi theo byte (sel), ack sau 1 chu kỳ
+`timescale 1ns/1ps
+// RAM Wishbone, ghi theo byte (sel), ack sau 1 chu kỳ.
+// Tách 4 làn 8 bit, mỗi làn một mảng không có byte-enable, để Yosys dùng BSRAM
+// thường thay cho chế độ X9 (SPX9) - chế độ này chạy sai trên GW2A khi nạp qua apicula.
+// INIT_FILE là tiền tố: làn k đọc <INIT_FILE>k.hex (Makefile cắt từ fw.bin).
 module wb_ram #(
     parameter WORDS     = 1024,
     parameter INIT_FILE = ""
@@ -11,28 +15,32 @@ module wb_ram #(
     output reg  [31:0] dat_o,
     output reg         ack
 );
-    reg [31:0] mem [0:WORDS-1];
+    reg [7:0] m0 [0:WORDS-1];
+    reg [7:0] m1 [0:WORDS-1];
+    reg [7:0] m2 [0:WORDS-1];
+    reg [7:0] m3 [0:WORDS-1];
     wire [$clog2(WORDS)-1:0] idx = adr[$clog2(WORDS)+1:2];
-    reg  [31:0] w;
+    wire go = cyc & stb & ~ack;
     integer i;
 
     initial begin
-        for (i = 0; i < WORDS; i = i + 1) mem[i] = 32'h0;
-        if (INIT_FILE != "") $readmemh(INIT_FILE, mem);
+        for (i = 0; i < WORDS; i = i + 1) begin m0[i] = 0; m1[i] = 0; m2[i] = 0; m3[i] = 0; end
+        if (INIT_FILE != "") begin
+            $readmemh({INIT_FILE, "0.hex"}, m0);
+            $readmemh({INIT_FILE, "1.hex"}, m1);
+            $readmemh({INIT_FILE, "2.hex"}, m2);
+            $readmemh({INIT_FILE, "3.hex"}, m3);
+        end
     end
 
     always @(posedge clk) begin
-        ack <= cyc & stb & ~ack;
-        if (cyc & stb & ~ack) begin
-            w = mem[idx];
-            if (we) begin
-                if (sel[0]) w[7:0]   = dat_i[7:0];
-                if (sel[1]) w[15:8]  = dat_i[15:8];
-                if (sel[2]) w[23:16] = dat_i[23:16];
-                if (sel[3]) w[31:24] = dat_i[31:24];
-                mem[idx] <= w;
-            end
-            dat_o <= mem[idx];
+        ack <= go;
+        if (go) begin
+            if (we & sel[0]) m0[idx] <= dat_i[7:0];
+            if (we & sel[1]) m1[idx] <= dat_i[15:8];
+            if (we & sel[2]) m2[idx] <= dat_i[23:16];
+            if (we & sel[3]) m3[idx] <= dat_i[31:24];
+            dat_o <= {m3[idx], m2[idx], m1[idx], m0[idx]};
         end
     end
 endmodule
