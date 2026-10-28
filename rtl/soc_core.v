@@ -117,6 +117,7 @@ module soc_core #(
         .dat_o(uart_dat), .ack(uart_ack), .tx(uart_tx)
     );
 
+`ifndef NO_DMA
     dma_ctrl dma (
         .clk(clk), .rst(rst),
         .s_cyc(bus_cyc & sel_dma), .s_stb(bus_stb & sel_dma), .s_we(bus_we),
@@ -127,4 +128,12 @@ module soc_core #(
         .m_dat_i(bus_dat_r), .m_ack(dma_ack), .m_err(1'b0),
         .irq(dma_irq)
     );
+`else
+    // Bản không có DMA, chỉ để so tài nguyên: master 1 không xin bus, vùng 0x1000_4000 đọc ra 0
+    assign dma_cyc = 1'b0; assign dma_stb = 1'b0; assign dma_we = 1'b0; assign dma_sel = 4'h0;
+    assign dma_adr = 32'h0; assign dma_dat_o = 32'h0; assign dmas_dat = 32'h0; assign dma_irq = 1'b0;
+    reg dmas_ack_r;
+    always @(posedge clk) dmas_ack_r <= ~rst & bus_cyc & bus_stb & sel_dma & ~dmas_ack_r;
+    assign dmas_ack = dmas_ack_r;
+`endif
 endmodule

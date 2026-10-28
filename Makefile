@@ -36,7 +36,7 @@ OSS      ?= $(HOME)/tools/oss-cad-suite/bin
 FPGA_RTL  = fpga/tangnano20k_top.v rtl/soc_top.v rtl/soc_core.v rtl/soc_periph.v rtl/dma_ctrl.v $(PICO)
 
 fpga/soc.fs: sw/fw.hex fpga/tangnano20k.cst $(FPGA_RTL)
-> $(OSS)/yosys -q -l fpga/synth.log -p "read_verilog -sv $(FPGA_RTL); synth_gowin $(SYNTH_OPT) -top tangnano20k_top -family gw2a -json fpga/soc_synth.json"
+> $(OSS)/yosys -q -l fpga/synth.log -p "read_verilog -sv $(DEFS) $(FPGA_RTL); synth_gowin $(SYNTH_OPT) -top tangnano20k_top -family gw2a -json fpga/soc_synth.json"
 > $(OSS)/nextpnr-himbaechel -l fpga/pnr.log --json fpga/soc_synth.json --write fpga/soc_pnr.json --device GW2AR-LV18QN88C8/I7 --vopt family=GW2A-18C --vopt cst=fpga/tangnano20k.cst --freq 27
 > $(OSS)/gowin_pack -c -d GW2A-18C -o $@ fpga/soc_pnr.json
 
