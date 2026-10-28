@@ -104,13 +104,21 @@ LibreLane 3.0.16, Sky130A, `soc_core` (không gồm RAM), chu kỳ 25 ns, lần 
 | Setup / hold slack (corner xấu nhất) | −0,95 / +0,108 ns | +1,52 / +0,102 ns | |
 | DRC / LVS / antenna | Đạt | Đạt | |
 
-Cấu hình sửa slew `openlane/soc_core_fix.json` (chèn buffer cho dây dài hơn 400 µm, biên slew/cap 30%, sửa lại sau global routing), bản có DMA: vi phạm slew ở corner xấu nhất giảm từ 4.378 xuống 2.816, slew xấu nhất ở corner tt từ 1,30 ns xuống 1,01 ns, setup slack +1,89 ns và đạt ở mọi corner; diện tích và công suất không đổi. Slew xấu nhất ở corner tt (1,01 ns) nằm dưới giới hạn 1,5 ns của thư viện, nhưng ở corner ss_100C_1v60 vẫn còn chân tới 1,60 ns, vượt giới hạn thư viện.
+Sửa vi phạm slew (bản có DMA, cùng chu kỳ 25 ns):
+
+| Cấu hình | Vi phạm slew (corner xấu nhất) | Slew xấu nhất ở nom_ss | Setup / hold slack | Diện tích cell | Công suất |
+|---|---|---|---|---|---|
+| Mặc định (`soc_core.json`) | 4.378 | – | +1,52 / +0,102 ns | 160.295 µm² | 13,0 mW |
+| `soc_core_fix.json`: buffer cho dây > 400 µm, biên 30%, sửa sau global routing | 2.816 | 1,60 ns | +1,89 / +0,106 ns | 160.272 µm² | 13,0 mW |
+| `soc_core_fix3.json`: như trên + loại buffer yếu (`clkdlybuf4s*`, `dlygate4sd*`, `buf_1`) | 1.007 | 1,25 ns | +2,84 / +0,104 ns | 146.831 µm² | 12,3 mW |
+
+Nguyên nhân gốc: `repair_design` của OpenROAD chèn buffer yếu nhất trong thư viện (log ghi `clkdlybuf4s25_1`) và không nâng cỡ, trong khi tải ước lượng sau placement thấp hơn tải thật sau đi dây. Loại các buffer yếu giảm 77% vi phạm, tăng setup slack, giảm diện tích và công suất. Với fix3, slew xấu nhất ở corner nom_ss (1,25 ns) nằm dưới giới hạn 1,5 ns của thư viện.
 
 `dma_ctrl` riêng lẻ (20 ns, lần chạy 26/10): die 21.083 µm², 142 flip-flop, setup/hold +3,76/+0,108 ns, 1,04 mW, DRC/LVS/antenna đạt.
 
 ## Hạn chế
 
-- Còn vi phạm max slew ở corner chậm (366 với `dma_ctrl`, 4.378 với `soc_core`, tính ở corner xấu nhất). Vi phạm nằm trên các net do buffer `fanoutNNN` của repair_design kéo (slew 1,30 ns so với giới hạn 0,75 ns ở corner tt); LibreLane mặc định không chèn buffer cho dây dài và không sửa lại sau global routing. Bật hai cơ chế này giảm 36% số vi phạm; phần còn lại vượt ràng buộc 0,75 ns (`MAX_TRANSITION_CONSTRAINT`) trong khi timing vẫn đạt. Còn 1 vi phạm max cap ở buffer gốc của cây clock (`clkbuf_0_clk`).
+- Với fix3 vẫn còn 1.007 chân vượt ràng buộc 0,75 ns (`MAX_TRANSITION_CONSTRAINT`) ở corner xấu nhất, còn vi phạm max cap và 71 vi phạm max fanout. `dma_ctrl` riêng lẻ chưa chạy lại với cấu hình này (366 vi phạm slew).
 - Luồng vật lý chưa gồm RAM; số liệu diện tích/công suất chỉ của lõi.
 - DMA một kênh, chỉ truyền nguyên word, không burst, chưa bắt tay với ngoại vi (chưa chép thẳng vào UART được).
 - Vòng polling STATUS tranh bus với DMA: chép 64 word giữ BUSY 494 chu kỳ khi CPU polling, 477 chu kỳ khi CPU đang tự chép dữ liệu.
