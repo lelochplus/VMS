@@ -27,5 +27,5 @@ Số liệu qua từng giai đoạn (corner tt; giai đoạn 3–5 là STA giữ
 - Setup và hold âm sau placement là do net clock chưa có cây (một dây kéo tới 2.120 chân); CTS giải quyết ở giai đoạn 4.
 - Chi phí diện tích lớn nhất là sửa hold sau CTS (+12.717 µm²), vì ở các corner nhanh có 1.865 điểm cuối vi phạm hold.
 - Signoff ở 9 corner: setup xấu nhất ở max_ss_100C_1v60, hold xấu nhất ở các corner ff; không có đường vi phạm.
-- Cảnh báo còn lại: vi phạm max slew theo ràng buộc 0,75 ns ở corner chậm (1.007 ở max_ss, slew xấu nhất 1.37 ns), 1 vi phạm max cap ở buffer gốc cây clock, 71 vi phạm max fanout ở net cây clock (67/71).
+- Cảnh báo còn lại: vi phạm max slew theo ràng buộc 0,75 ns ở corner chậm (1.007 ở max_ss, slew xấu nhất 1,37 ns), 1 vi phạm max cap ở buffer gốc cây clock, 71 vi phạm max fanout, 67 trong số đó ở net cây clock.
 - Chạy theo từng giai đoạn cho kết quả trùng với chạy cả flow một lần.

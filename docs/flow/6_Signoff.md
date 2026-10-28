@@ -84,5 +84,5 @@ Run `openlane/runs/step`, 25 step: 54-openroad-fillinsertion → 78-misc-reportm
 - Công suất sau trích xuất RC (tt) 12,35 mW: nội bộ 7,42 mW, chuyển mạch 4,93 mW, rò 0,2 µW; tăng từ 9,51 mW ước lượng vì có điện dung dây thật.
 - IR drop xấu nhất 0,48 mV trên VPWR (0,03% của 1,8 V), 0,37 mV trên VGND; không đáng kể. Phân tích dùng vị trí nguồn mặc định vì chưa khai báo `VSRC_LOC_FILES`.
 - GDS xuất bằng Magic và KLayout trùng nhau (XOR 0 khác biệt); không có chồng lấn bất hợp lệ.
-- Các cảnh báo luật thiết kế còn lại: vi phạm max slew theo ràng buộc 0,75 ns ở corner chậm (1.007 ở max_ss, 639 ở nom_ss, 2 ở tt, 0 ở ff); slew xấu nhất 1.37 ns ở max_ss, 0 chân vượt giới hạn 1,5 ns của thư viện. 1 vi phạm max cap tại `clkbuf_0_clk/X` (buffer gốc cây clock). 71 vi phạm max fanout, 67 trong số đó ở net cây clock.
+- Các cảnh báo luật thiết kế còn lại: vi phạm max slew theo ràng buộc 0,75 ns ở corner chậm (1.007 ở max_ss, 639 ở nom_ss, 2 ở tt, 0 ở ff); slew xấu nhất 1,37 ns ở max_ss, 0 chân vượt giới hạn 1,5 ns của thư viện. 1 vi phạm max cap tại `clkbuf_0_clk/X` (buffer gốc cây clock). 71 vi phạm max fanout, 67 trong số đó ở net cây clock.
 - Kết quả trùng khớp lần chạy fix3 một lần (setup +2,84 ns, hold +0,104 ns, 12,35 mW, 1.007 vi phạm slew).

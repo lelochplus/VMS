@@ -106,6 +106,8 @@ LibreLane 3.0.16, Sky130A, `soc_core` (không gồm RAM), chu kỳ 25 ns, lần 
 | Setup / hold slack (corner xấu nhất) | −0,95 / +0,108 ns | +1,52 / +0,102 ns | |
 | DRC / LVS / antenna | Đạt | Đạt | |
 
+Báo cáo thiết kế vật lý theo từng giai đoạn (tổng hợp, floorplan, placement, CTS, routing, signoff): [`docs/flow/README.md`](docs/flow/README.md).
+
 Sửa vi phạm slew (bản có DMA, cùng chu kỳ 25 ns):
 
 | Cấu hình | Vi phạm slew (corner xấu nhất) | Slew xấu nhất ở nom_ss | Setup / hold slack | Diện tích cell | Công suất |
