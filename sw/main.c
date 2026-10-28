@@ -19,7 +19,7 @@
 #define ST_ERR      (1u << 2)
 
 #define N 16
-#define PERF_N 64
+#define PERF_N 256
 
 static uint32_t src_buf[N];
 static uint32_t dst_buf[N];
@@ -65,7 +65,7 @@ static inline uint32_t rdcycle(void) {
     return c;
 }
 
-static void cpu_copy(const uint32_t *s, uint32_t *d, uint32_t words) {
+static __attribute__((noinline)) void cpu_copy(const uint32_t *s, uint32_t *d, uint32_t words) {
     while (words--) *d++ = *s++;
 }
 
@@ -113,40 +113,38 @@ int main(void) {
     uart_puts(bad ? "IRQ FAIL\n" : "IRQ OK\n");
 
     // Test đồng thời: DMA chép perf_src -> perf_dst (64 word) trong khi CPU tự chép src_buf -> dst_buf
-    for (i = 0; i < PERF_N; i++) { perf_src[i] = 0xC0DE0000u | i; perf_dst[i] = 0; }
+    for (i = 0; i < 64; i++) { perf_src[i] = 0xC0DE0000u | i; perf_dst[i] = 0; }
     for (i = 0; i < N; i++) dst_buf[i] = 0;
     DMA_SRC = (uint32_t)perf_src;
     DMA_DST = (uint32_t)perf_dst;
-    DMA_LEN = PERF_N;
+    DMA_LEN = 64;
     DMA_CTRL = DMA_START | DMA_SRC_INC | DMA_DST_INC;
     cpu_copy(src_buf, dst_buf, N);              // CPU dùng bus cùng lúc với DMA
     do { st = DMA_STATUS; } while (st & ST_BUSY);
     DMA_STATUS = ST_DONE | ST_ERR;
     bad = (st != ST_DONE);
     for (i = 0; i < N; i++) if (dst_buf[i] != src_buf[i]) bad++;
-    for (i = 0; i < PERF_N; i++) if (perf_dst[i] != perf_src[i]) bad++;
+    for (i = 0; i < 64; i++) if (perf_dst[i] != perf_src[i]) bad++;
     uart_puts(bad ? "CONC FAIL\n" : "CONC OK\n");
 
-    // Đo hiệu năng: chép PERF_N word bằng CPU và bằng DMA (đếm chu kỳ clk)
-    uint32_t t0, t_cpu, t_dma;
-    for (i = 0; i < PERF_N; i++) { perf_src[i] = 0x5A000000u | i; perf_dst[i] = 0; }
-
-    t0 = rdcycle();
-    cpu_copy(perf_src, perf_dst, PERF_N);
-    t_cpu = rdcycle() - t0;
-    bad = 0;
-    for (i = 0; i < PERF_N; i++) if (perf_dst[i] != perf_src[i]) bad++;
-    uart_puts(bad ? "CPU COPY FAIL\n" : "CPU: ");
-    if (!bad) { uart_putdec(t_cpu); uart_puts(" cycles\n"); }
-
-    for (i = 0; i < PERF_N; i++) perf_dst[i] = 0;
-    t0 = rdcycle();
-    st = dma_copy(perf_src, perf_dst, PERF_N);
-    t_dma = rdcycle() - t0;
-    bad = (st != ST_DONE);
-    for (i = 0; i < PERF_N; i++) if (perf_dst[i] != perf_src[i]) bad++;
-    uart_puts(bad ? "DMA COPY FAIL\n" : "DMA: ");
-    if (!bad) { uart_putdec(t_dma); uart_puts(" cycles\n"); }
+    // Đo hiệu năng: chép n word bằng CPU và bằng DMA (rdcycle, gồm cả cấu hình và chờ)
+    static const uint32_t sizes[] = {16, 32, 64, 128, 256};
+    uint32_t k, n, t0, t_cpu, t_dma;
+    for (k = 0; k < sizeof sizes / sizeof sizes[0]; k++) {
+        n = sizes[k];
+        for (i = 0; i < n; i++) { perf_src[i] = 0x5A000000u | i; perf_dst[i] = 0; }
+        t0 = rdcycle(); cpu_copy(perf_src, perf_dst, n); t_cpu = rdcycle() - t0;
+        bad = 0;
+        for (i = 0; i < n; i++) if (perf_dst[i] != perf_src[i]) bad++;
+        for (i = 0; i < n; i++) perf_dst[i] = 0;
+        t0 = rdcycle(); st = dma_copy(perf_src, perf_dst, n); t_dma = rdcycle() - t0;
+        bad += (st != ST_DONE);
+        for (i = 0; i < n; i++) if (perf_dst[i] != perf_src[i]) bad++;
+        uart_puts("N="); uart_putdec(n);
+        uart_puts(" CPU="); uart_putdec(t_cpu);
+        uart_puts(" DMA="); uart_putdec(t_dma);
+        uart_puts(bad ? " FAIL\n" : "\n");
+    }
     uart_putc(4);                     // EOT: báo testbench kết thúc
     for (;;);
 }

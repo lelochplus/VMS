@@ -29,7 +29,7 @@ module tangnano20k_top #(
     wire trap;
     assign dbg_led = ~{|tx_seen, rst, trap};
 
-    soc_top #(.RAM_WORDS(1024), .CLK_DIV(234), .FW_HEX("sw/fw")) soc (
+    soc_top #(.RAM_WORDS(2048), .CLK_DIV(234), .FW_HEX("sw/fw")) soc (
         .clk(clk), .rst(rst), .uart_tx(uart_tx), .trap(trap)
     );
 endmodule

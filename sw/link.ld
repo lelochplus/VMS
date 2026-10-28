@@ -1,5 +1,5 @@
 ENTRY(_start)
-MEMORY { RAM (rwx) : ORIGIN = 0x00000000, LENGTH = 4K }
+MEMORY { RAM (rwx) : ORIGIN = 0x00000000, LENGTH = 8K }
 SECTIONS {
     .text   : { *(.text.start) *(.text*) . = ALIGN(4); } > RAM
     .rodata : { *(.rodata*) *(.srodata*) . = ALIGN(4); } > RAM

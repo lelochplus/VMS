@@ -8,7 +8,7 @@ module tb_soc;
 
     wire uart_tx, trap;
 
-    soc_top #(.RAM_WORDS(1024), .CLK_DIV(CLK_DIV), .FW_HEX("sw/fw")) dut (
+    soc_top #(.RAM_WORDS(2048), .CLK_DIV(CLK_DIV), .FW_HEX("sw/fw")) dut (
         .clk(clk), .rst(rst), .uart_tx(uart_tx), .trap(trap)
     );
 
@@ -33,6 +33,18 @@ module tb_soc;
         else                  ram_cpu <= ram_cpu + 1;
     end
 
+    // Mỗi lần DMA chạy: số chu kỳ BUSY và độ trễ từ lúc BUSY lên đến giao dịch RAM đầu tiên của DMA
+    reg busy_d = 0, first = 0;
+    integer nrun = 0, t_start = 0, k;
+    integer run_busy [0:15];
+    integer run_lat  [0:15];
+    always @(posedge clk) if (!rst) begin
+        busy_d <= dut.core.dma.busy;
+        if (dut.core.dma.busy && !busy_d) begin t_start <= cyc; first <= 1; end
+        if (first && dut.core.ram_ack && dut.core.use_dma) begin run_lat[nrun] <= cyc - t_start; first <= 0; end
+        if (!dut.core.dma.busy && busy_d) begin run_busy[nrun] <= cyc - t_start; nrun <= nrun + 1; end
+    end
+
     // Giải mã UART 8N1 rồi in ký tự ra console
     initial begin
         forever begin
@@ -46,6 +58,8 @@ module tb_soc;
                 if (n >= NEXP && bad == 0 && ram_cpu > 0 && ram_dma > 0) $display("PASS: SoC va DMA hoat dong dung");
                 else                       $display("FAIL: nhan %0d ky tu, %0d ky tu sai", n, bad);
                 $display("DMA busy (lan chep cuoi): %0d chu ky", busy_cycles);
+                for (k = 0; k < nrun; k = k + 1)
+                    $display("[tb] DMA lan %0d: BUSY %0d chu ky, tre khoi dong %0d chu ky", k + 1, run_busy[k], run_lat[k]);
                 $display("Trong luc DMA BUSY: CPU %0d, DMA %0d giao dich RAM", ram_cpu, ram_dma);
                 $finish;
             end else begin
