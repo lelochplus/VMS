@@ -14,3 +14,6 @@ sim_*
 fpga/*.json
 fpga/*.fs
 fpga/post_synth.v
+t5.gtkw
+fsm_state.txt
+dma_reg.txt
