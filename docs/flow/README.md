@@ -29,3 +29,19 @@ Số liệu qua từng giai đoạn (corner tt; giai đoạn 3–5 là STA giữ
 - Signoff ở 9 corner: setup xấu nhất ở max_ss_100C_1v60, hold xấu nhất ở các corner ff; không có đường vi phạm.
 - Cảnh báo còn lại: vi phạm max slew theo ràng buộc 0,75 ns ở corner chậm (1.007 ở max_ss, slew xấu nhất 1,37 ns), 1 vi phạm max cap ở buffer gốc cây clock, 71 vi phạm max fanout, 67 trong số đó ở net cây clock.
 - Chạy theo từng giai đoạn cho kết quả trùng với chạy cả flow một lần.
+
+## Thời gian chạy
+
+Cộng từ `runtime.txt` của từng step (máy ảo 8 nhân, 7 GB RAM):
+
+| Giai đoạn | Số step | Thời gian | Step lâu nhất |
+|---|---|---|---|
+| 1. Tổng hợp | 12 | 0.6 phút | `06-yosys-synthesis` (0.4 phút) |
+| 2. Floorplan + PDN | 9 | 0.1 phút | `21-openroad-generatepdn` (0.0 phút) |
+| 3. Placement (kèm STA 3b) | 14 | 1.1 phút | `32-openroad-repairdesignpostgpl` (0.3 phút) |
+| 4. CTS | 4 | 2.1 phút | `38-openroad-resizertimingpostcts` (1.4 phút) |
+| 5. Routing | 14 | 10.6 phút | `46-openroad-detailedrouting` (8.5 phút) |
+| 6. Signoff | 25 | 5.7 phút | `66-magic-drc` (1.9 phút) |
+| **Tổng** | 78 | **20.2 phút** | |
+
+Ảnh layout cuối do KLayout vẽ: [`docs/layout_soc_core_step.png`](../layout_soc_core_step.png).
