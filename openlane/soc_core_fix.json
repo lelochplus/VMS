@@ -1,0 +1,19 @@
+{
+  "DESIGN_NAME": "soc_core",
+  "VERILOG_FILES": [
+    "dir::../rtl/soc_core.v",
+    "dir::../rtl/soc_periph.v",
+    "dir::../rtl/dma_ctrl.v",
+    "dir::../third_party/picorv32/picorv32.v"
+  ],
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 25,
+  "PDK": "sky130A",
+  "DESIGN_REPAIR_MAX_WIRE_LENGTH": 400,
+  "DESIGN_REPAIR_MAX_SLEW_PCT": 30,
+  "DESIGN_REPAIR_MAX_CAP_PCT": 30,
+  "RUN_POST_GRT_DESIGN_REPAIR": true,
+  "GRT_DESIGN_REPAIR_MAX_WIRE_LENGTH": 400,
+  "GRT_DESIGN_REPAIR_MAX_SLEW_PCT": 20,
+  "GRT_DESIGN_REPAIR_MAX_CAP_PCT": 20
+}

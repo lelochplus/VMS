@@ -92,19 +92,23 @@ FPGA Tang Nano 20K (GW2AR-18), RAM 8 KB:
 | BSRAM | 6 | 6 |
 | Fmax | 115,3 MHz | 104,1 MHz |
 
-LibreLane, Sky130A (lần chạy 26/10, trước khi khóa CTRL khi BUSY):
+LibreLane 3.0.16, Sky130A, `soc_core` (không gồm RAM), chu kỳ 25 ns, lần chạy 28/10:
 
-| | `dma_ctrl` (20 ns) | `soc_core` (25 ns, không RAM) |
-|---|---|---|
-| Diện tích die | 21.083 µm² | 250.306 µm² |
-| Flip-flop | 142 | 2.119 |
-| Setup / hold slack | +3,76 / +0,108 ns | +2,28 / +0,105 ns |
-| Công suất (ước lượng) | 1,04 mW | 11,9 mW |
-| DRC / LVS / antenna | Đạt | Đạt |
+| | Không DMA | Có DMA | Chi phí của DMA |
+|---|---|---|---|
+| Diện tích standard cell | 148.547 µm² | 160.295 µm² | +7,9% |
+| Diện tích die | 231.279 µm² | 250.587 µm² | +8,3% |
+| Số standard cell | 15.037 | 16.298 | +1.261 |
+| Flip-flop | 1.975 | 2.119 | +144 |
+| Công suất (ước lượng) | 11,6 mW | 13,0 mW | +1,3 mW |
+| Setup / hold slack (corner xấu nhất) | −0,95 / +0,108 ns | +1,52 / +0,102 ns | |
+| DRC / LVS / antenna | Đạt | Đạt | |
+
+`dma_ctrl` riêng lẻ (20 ns, lần chạy 26/10): die 21.083 µm², 142 flip-flop, setup/hold +3,76/+0,108 ns, 1,04 mW, DRC/LVS/antenna đạt.
 
 ## Hạn chế
 
-- Còn vi phạm max slew ở corner chậm (366 với `dma_ctrl`, 4.189 với `soc_core`), chưa xác định nguyên nhân gốc. Cấm cell trễ `clkdlybuf4s*` không giải quyết được.
+- Còn vi phạm max slew ở corner chậm (366 với `dma_ctrl`, 4.378 với `soc_core`, tổng các corner). Vi phạm nằm trên các net do buffer `fanoutNNN` của repair_design kéo (slew 1,30 ns so với giới hạn 0,75 ns ở corner tt); LibreLane mặc định không chèn buffer cho dây dài và không sửa lại sau global routing.
 - Luồng vật lý chưa gồm RAM; số liệu diện tích/công suất chỉ của lõi.
 - DMA một kênh, chỉ truyền nguyên word, không burst, chưa bắt tay với ngoại vi (chưa chép thẳng vào UART được).
 - Vòng polling STATUS tranh bus với DMA: chép 64 word giữ BUSY 494 chu kỳ khi CPU polling, 477 chu kỳ khi CPU đang tự chép dữ liệu.
