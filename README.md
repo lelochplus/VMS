@@ -1,40 +1,57 @@
 # RISC-V SoC tích hợp bộ điều khiển DMA
 
-SoC gồm lõi PicoRV32 (RV32I), bus Wishbone dùng chung cho hai master (CPU, DMA) qua arbiter round-robin, RAM, UART TX và bộ điều khiển DMA một kênh có ngắt. Toàn bộ quy trình chạy trên Linux: mô phỏng (Verilator, Icarus), firmware (RISC-V GCC), thiết kế vật lý (LibreLane, Sky130).
+SoC gồm lõi PicoRV32 (RV32I), bus Wishbone dùng chung cho hai master (CPU, DMA) qua arbiter round-robin, RAM, UART TX và bộ điều khiển DMA một kênh có ngắt. Toàn bộ quy trình chạy trên Linux: mô phỏng (Verilator, Icarus, GTKWave), firmware (RISC-V GCC), thiết kế vật lý (LibreLane, Sky130, KLayout) và chạy thật trên FPGA Sipeed Tang Nano 20K.
 
 ## Cấu trúc
 
-| Thư mục | Nội dung |
+| Đường dẫn | Nội dung |
 |---|---|
 | `rtl/dma_ctrl.v` | Bộ điều khiển DMA (slave cấu hình + master truyền dữ liệu) |
-| `rtl/soc_core.v` | Lõi SoC: CPU, arbiter, giải mã địa chỉ, UART, DMA; RAM nối ra cổng `ext_*` |
-| `rtl/soc_top.v` | `soc_core` + RAM, dùng để mô phỏng |
-| `rtl/soc_periph.v` | `wb_ram`, `wb_uart_tx` |
-| `tb/` | `tb_dma.v` (9 ca kiểm tra DMA), `tb_soc.v` (chạy firmware, giải mã UART) |
-| `sw/` | `start.S` (reset, vector ngắt), `link.ld`, `main.c` (kiểm tra DMA, ngắt, đo hiệu năng) |
-| `openlane/` | Cấu hình LibreLane cho `dma_ctrl` và `soc_core` |
+| `rtl/soc_core.v` | Lõi SoC: CPU, arbiter, giải mã địa chỉ, UART, DMA; RAM nối ra cổng `ext_*`; macro `NO_DMA` bỏ DMA để so tài nguyên |
+| `rtl/soc_top.v` | `soc_core` + RAM, dùng cho mô phỏng và FPGA |
+| `rtl/soc_periph.v` | `wb_ram` (4 làn 8 bit), `wb_uart_tx` |
+| `tb/tb_dma.v` | 11 ca kiểm tra DMA, slave có độ trễ ngẫu nhiên |
+| `tb/tb_soc.v` | Chạy firmware, giải mã UART, ghi BUSY và độ trễ khởi động, đếm giao dịch RAM của từng master |
+| `tb/tb_fpga.v` | Mô phỏng đúng top FPGA ở 27 MHz |
+| `sw/` | `start.S` (reset, vector ngắt), `link.ld` (RAM 8 KB), `main.c` (DMA, ngắt, chạy đồng thời, đo N = 16…256) |
+| `fpga/` | `tangnano20k_top.v` (reset, LED gỡ lỗi), `tangnano20k.cst` |
+| `openlane/` | Cấu hình LibreLane: `dma_ctrl`, `soc_core`, `soc_core_nodma` |
+| `scripts/` | `gtkw_t5.py` (mở GTKWave đúng ca T5), `asic_metrics.py`, `layout_shot.py` |
+| `docs/` | Ảnh layout |
+| `lint.vlt` | Các cảnh báo Verilator được miễn có chủ đích |
 
 ## Cài đặt
 
 ```bash
-sudo apt install verilator iverilog gtkwave gcc-riscv64-unknown-elf docker.io
+sudo apt install verilator iverilog gtkwave klayout gcc-riscv64-unknown-elf docker.io openfpgaloader picocom
 git clone --depth 1 https://github.com/YosysHQ/picorv32.git third_party/picorv32
 python3 -m venv .venv && source .venv/bin/activate && pip install librelane
 ```
 
+Phần FPGA dùng [OSS CAD Suite](https://github.com/YosysHQ/oss-cad-suite-build) giải nén ở `~/tools/oss-cad-suite` (đổi bằng `make OSS=<thư mục bin>`).
+
 ## Chạy
 
 ```bash
-make test                     # testbench DMA + SoC, dừng nếu có FAIL
-gtkwave soc.vcd               # xem dạng sóng
-python3 -m librelane --dockerized openlane/soc_core.json   # RTL -> GDSII
+make lint                     # Verilator -Wall
+make test                     # lint + tb_dma + tb_soc, dừng nếu có FAIL
+gtkwave soc.vcd               # dạng sóng toàn SoC
+make sim-dma && python3 scripts/gtkw_t5.py dump.vcd && gtkwave t5.gtkw   # mở sẵn ca T5
+make fpga                     # tổng hợp + P&R cho Tang Nano 20K, in tài nguyên và Fmax
+make prog                     # nạp vào SRAM của FPGA (mất khi rút điện)
+openFPGALoader -b tangnano20k -f fpga/soc.fs                            # ghi vào flash
+picocom -b 115200 --imap lfcrlf /dev/ttyUSB1                            # xem UART, bấm S1 để chạy lại
+librelane --dockerized openlane/soc_core.json                           # RTL -> GDSII, chạy trong terminal thật
+klayout -l $(find ~/.volare -name sky130A.lyp | head -1) openlane/runs/<run>/final/gds/soc_core.gds
 ```
+
+So tài nguyên khi không có DMA: `make fpga DEFS=-DNO_DMA` và `librelane --dockerized --run-tag nodma openlane/soc_core_nodma.json`.
 
 ## Bản đồ bộ nhớ
 
 | Địa chỉ | Khối |
 |---|---|
-| `0x0000_0000` | RAM (4 KB khi mô phỏng) |
+| `0x0000_0000` | RAM 8 KB (mô phỏng và FPGA; với ASIC, RAM nằm ngoài lõi qua cổng `ext_*`) |
 | `0x1000_0000` | UART: `+0x0` ghi byte, `+0x4` bit0 = BUSY |
 | `0x1000_4000` | Thanh ghi DMA |
 
@@ -42,25 +59,40 @@ python3 -m librelane --dockerized openlane/soc_core.json   # RTL -> GDSII
 
 | Offset | Tên | Nội dung |
 |---|---|---|
-| `0x00` | CTRL | bit0 START, bit1 IRQ_EN, bit2 SRC_INC, bit3 DST_INC |
+| `0x00` | CTRL | bit0 START, bit1 IRQ_EN, bit2 SRC_INC, bit3 DST_INC (bỏ qua khi BUSY) |
 | `0x04` | STATUS | bit0 BUSY, bit1 DONE, bit2 ERR (ghi 1 để xóa DONE/ERR) |
 | `0x08` | SRC | Địa chỉ nguồn (bỏ qua khi BUSY) |
 | `0x0C` | DST | Địa chỉ đích (bỏ qua khi BUSY) |
-| `0x10` | LEN | Số word 32 bit (bỏ qua khi BUSY, START bị bỏ qua nếu LEN = 0) |
+| `0x10` | LEN | Số word 32 bit (bỏ qua khi BUSY; START bị bỏ qua nếu LEN = 0) |
 
 Ngắt DMA nối vào `irq[3]` của PicoRV32, cấu hình theo mức (`LATCHED_IRQ` bit 3 = 0) để trình xử lý không bị gọi hai lần.
 
 ## Kết quả
 
-Mô phỏng, chép 64 word:
+Chép N word với cùng một firmware, đo bằng `rdcycle`. Số trên Tang Nano 20K (27 MHz) trùng từng chu kỳ với mô phỏng:
 
-| Cách chép | Chu kỳ |
-|---|---|
-| CPU (vòng lặp `lw`/`sw`) | 3.277 |
-| DMA, tính cả cấu hình và polling | 645 |
-| DMA, thời gian BUSY | 494 (khoảng 7,7 chu kỳ/word) |
+| N (word) | CPU | DMA, gồm cấu hình và chờ | DMA, thời gian BUSY | Tăng tốc |
+|---|---|---|---|---|
+| 16 | 969 | 255 | 122 | 3,8× |
+| 32 | 1.881 | 379 | 246 | 5,0× |
+| 64 | 3.705 | 627 | 494 | 5,9× |
+| 128 | 7.353 | 1.123 | 990 | 6,5× |
+| 256 | 14.649 | 2.115 | 1.982 | 6,9× |
 
-LibreLane, Sky130A:
+- CPU tốn khoảng 57 chu kỳ/word; DMA tốn 7,75 chu kỳ/word cộng 133 chu kỳ cố định cho cấu hình và chờ. Tăng tốc tiến tới 7,4 lần.
+- Độ trễ khởi động: 2 chu kỳ từ lúc BUSY lên đến giao dịch RAM đầu tiên của DMA.
+- Chạy đồng thời (DMA chép 64 word trong khi CPU tự chép 16 word): dữ liệu cả hai đều đúng. Trong mọi lúc DMA BUSY, CPU hoàn tất 599 giao dịch RAM, DMA 1.184 (= 2 × 592 word đã chép).
+
+FPGA Tang Nano 20K (GW2AR-18), RAM 8 KB:
+
+| | Không DMA | Có DMA |
+|---|---|---|
+| LUT4 | 2.511 | 3.207 (+28%) |
+| DFF | 900 | 1.016 (+13%) |
+| BSRAM | 6 | 6 |
+| Fmax | 115,3 MHz | 104,1 MHz |
+
+LibreLane, Sky130A (lần chạy 26/10, trước khi khóa CTRL khi BUSY):
 
 | | `dma_ctrl` (20 ns) | `soc_core` (25 ns, không RAM) |
 |---|---|---|
@@ -74,6 +106,7 @@ LibreLane, Sky130A:
 
 - Còn vi phạm max slew ở corner chậm (366 với `dma_ctrl`, 4.189 với `soc_core`), chưa xác định nguyên nhân gốc. Cấm cell trễ `clkdlybuf4s*` không giải quyết được.
 - Luồng vật lý chưa gồm RAM; số liệu diện tích/công suất chỉ của lõi.
-- DMA một kênh, chỉ truyền nguyên word, không burst.
+- DMA một kênh, chỉ truyền nguyên word, không burst, chưa bắt tay với ngoại vi (chưa chép thẳng vào UART được).
+- Vòng polling STATUS tranh bus với DMA: chép 64 word giữ BUSY 494 chu kỳ khi CPU polling, 477 chu kỳ khi CPU đang tự chép dữ liệu.
 - Testbench chưa phủ lỗi bus phía ghi và reset giữa lúc truyền.
-- Chưa chạy trên FPGA thật.
+- Yosys 0.70 bỏ dữ liệu `$readmemh` nếu cùng khối `initial` có vòng xóa RAM, nên `wb_ram` chỉ xóa RAM trong mô phỏng (`ifndef SYNTHESIS`).
