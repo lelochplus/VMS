@@ -114,6 +114,16 @@ Sửa vi phạm slew (bản có DMA, cùng chu kỳ 25 ns):
 
 Nguyên nhân gốc: `repair_design` của OpenROAD chèn buffer yếu nhất trong thư viện (log ghi `clkdlybuf4s25_1`) và không nâng cỡ, trong khi tải ước lượng sau placement thấp hơn tải thật sau đi dây. Loại các buffer yếu giảm 77% vi phạm, tăng setup slack, giảm diện tích và công suất. Với fix3, slew xấu nhất ở mọi corner là 1,37 ns (corner max_ss), dưới giới hạn 1,5 ns của thư viện; các vi phạm còn lại chỉ là vượt ràng buộc 0,75 ns do flow đặt.
 
+Khảo sát chu kỳ clock (cấu hình fix3):
+
+| Chu kỳ | Tần số | Setup slack tt | Setup slack nom_ss | Setup slack max_ss | Công suất |
+|---|---|---|---|---|---|
+| 25 ns | 40 MHz | +14,51 ns | +3,19 ns | +2,84 ns | 12,35 mW |
+| 22 ns | 45,5 MHz | +11,51 ns | +0,19 ns | −0,16 ns | 14,03 mW |
+| 20 ns | 50 MHz | +9,69 ns | −1,53 ns | −1,86 ns | 15,43 mW |
+
+Đường găng dài khoảng 10,5 ns ở corner tt và 22,2 ns ở corner max_ss (100 °C, 1,60 V), gần như không đổi khi siết chu kỳ. Tần số tối đa ước tính khoảng 95 MHz ở điều kiện điển hình và khoảng 45 MHz nếu phải đạt ở mọi corner; bản chốt dùng 25 ns (40 MHz). Công suất tỉ lệ thuận với tần số, khoảng 0,31 mW/MHz; diện tích cell và hold slack (+0,10 ns) không đổi.
+
 `dma_ctrl` riêng lẻ (20 ns, lần chạy 26/10): die 21.083 µm², 142 flip-flop, setup/hold +3,76/+0,108 ns, 1,04 mW, DRC/LVS/antenna đạt.
 
 ## Hạn chế
