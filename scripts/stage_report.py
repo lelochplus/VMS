@@ -36,7 +36,7 @@ def wanted(k):
 
 def fmt(v):
     if isinstance(v, float):
-        return f'{v:.4g}' if abs(v) < 1e4 else f'{v:,.0f}'.replace(',', '.')
+        return f'{v:.4g}' if abs(v) < 1e4 else f'{v:.0f}'
     return str(v)
 
 
