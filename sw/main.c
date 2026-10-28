@@ -112,6 +112,21 @@ int main(void) {
         if (dst_buf[i] != src_buf[i]) bad++;
     uart_puts(bad ? "IRQ FAIL\n" : "IRQ OK\n");
 
+    // Test đồng thời: DMA chép perf_src -> perf_dst (64 word) trong khi CPU tự chép src_buf -> dst_buf
+    for (i = 0; i < PERF_N; i++) { perf_src[i] = 0xC0DE0000u | i; perf_dst[i] = 0; }
+    for (i = 0; i < N; i++) dst_buf[i] = 0;
+    DMA_SRC = (uint32_t)perf_src;
+    DMA_DST = (uint32_t)perf_dst;
+    DMA_LEN = PERF_N;
+    DMA_CTRL = DMA_START | DMA_SRC_INC | DMA_DST_INC;
+    cpu_copy(src_buf, dst_buf, N);              // CPU dùng bus cùng lúc với DMA
+    do { st = DMA_STATUS; } while (st & ST_BUSY);
+    DMA_STATUS = ST_DONE | ST_ERR;
+    bad = (st != ST_DONE);
+    for (i = 0; i < N; i++) if (dst_buf[i] != src_buf[i]) bad++;
+    for (i = 0; i < PERF_N; i++) if (perf_dst[i] != perf_src[i]) bad++;
+    uart_puts(bad ? "CONC FAIL\n" : "CONC OK\n");
+
     // Đo hiệu năng: chép PERF_N word bằng CPU và bằng DMA (đếm chu kỳ clk)
     uint32_t t0, t_cpu, t_dma;
     for (i = 0; i < PERF_N; i++) { perf_src[i] = 0x5A000000u | i; perf_dst[i] = 0; }

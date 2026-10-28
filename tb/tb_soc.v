@@ -13,8 +13,8 @@ module tb_soc;
     );
 
     // Chuỗi mong đợi (33 ký tự), firmware kết thúc bằng byte 0x04 (EOT)
-    localparam NEXP = 33;
-    localparam [8*NEXP-1:0] EXPECT = "Hello, RISC-V SoC!\nDMA OK\nIRQ OK\n";
+    localparam NEXP = 41;
+    localparam [8*NEXP-1:0] EXPECT = "Hello, RISC-V SoC!\nDMA OK\nIRQ OK\nCONC OK\n";
     integer n = 0;
     integer bad = 0;
     integer i;
@@ -26,6 +26,13 @@ module tb_soc;
     always @(posedge dut.core.dma.busy) busy_t0 = cyc;
     always @(negedge dut.core.dma.busy) if (!rst) busy_cycles = cyc - busy_t0;
 
+    // Giao dịch RAM hoàn tất trong lúc DMA BUSY, tách theo master: CPU phải không bị khóa bus
+    integer ram_cpu = 0, ram_dma = 0;
+    always @(posedge clk) if (!rst && dut.core.dma.busy && dut.core.ram_ack) begin
+        if (dut.core.use_dma) ram_dma <= ram_dma + 1;
+        else                  ram_cpu <= ram_cpu + 1;
+    end
+
     // Giải mã UART 8N1 rồi in ký tự ra console
     initial begin
         forever begin
@@ -36,9 +43,10 @@ module tb_soc;
                 repeat (CLK_DIV) @(posedge clk);
             end
             if (ch == 8'h04) begin
-                if (n >= NEXP && bad == 0) $display("PASS: SoC va DMA hoat dong dung");
+                if (n >= NEXP && bad == 0 && ram_cpu > 0 && ram_dma > 0) $display("PASS: SoC va DMA hoat dong dung");
                 else                       $display("FAIL: nhan %0d ky tu, %0d ky tu sai", n, bad);
                 $display("DMA busy (lan chep cuoi): %0d chu ky", busy_cycles);
+                $display("Trong luc DMA BUSY: CPU %0d, DMA %0d giao dich RAM", ram_cpu, ram_dma);
                 $finish;
             end else begin
                 $write("%c", ch);
