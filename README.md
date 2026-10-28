@@ -112,13 +112,13 @@ Sửa vi phạm slew (bản có DMA, cùng chu kỳ 25 ns):
 | `soc_core_fix.json`: buffer cho dây > 400 µm, biên 30%, sửa sau global routing | 2.816 | 1,60 ns | +1,89 / +0,106 ns | 160.272 µm² | 13,0 mW |
 | `soc_core_fix3.json`: như trên + loại buffer yếu (`clkdlybuf4s*`, `dlygate4sd*`, `buf_1`) | 1.007 | 1,25 ns | +2,84 / +0,104 ns | 146.831 µm² | 12,3 mW |
 
-Nguyên nhân gốc: `repair_design` của OpenROAD chèn buffer yếu nhất trong thư viện (log ghi `clkdlybuf4s25_1`) và không nâng cỡ, trong khi tải ước lượng sau placement thấp hơn tải thật sau đi dây. Loại các buffer yếu giảm 77% vi phạm, tăng setup slack, giảm diện tích và công suất. Với fix3, slew xấu nhất ở corner nom_ss (1,25 ns) nằm dưới giới hạn 1,5 ns của thư viện.
+Nguyên nhân gốc: `repair_design` của OpenROAD chèn buffer yếu nhất trong thư viện (log ghi `clkdlybuf4s25_1`) và không nâng cỡ, trong khi tải ước lượng sau placement thấp hơn tải thật sau đi dây. Loại các buffer yếu giảm 77% vi phạm, tăng setup slack, giảm diện tích và công suất. Với fix3, slew xấu nhất ở mọi corner là 1,37 ns (corner max_ss), dưới giới hạn 1,5 ns của thư viện; các vi phạm còn lại chỉ là vượt ràng buộc 0,75 ns do flow đặt.
 
 `dma_ctrl` riêng lẻ (20 ns, lần chạy 26/10): die 21.083 µm², 142 flip-flop, setup/hold +3,76/+0,108 ns, 1,04 mW, DRC/LVS/antenna đạt.
 
 ## Hạn chế
 
-- Với fix3 vẫn còn 1.007 chân vượt ràng buộc 0,75 ns (`MAX_TRANSITION_CONSTRAINT`) ở corner xấu nhất, còn vi phạm max cap và 71 vi phạm max fanout. `dma_ctrl` riêng lẻ chưa chạy lại với cấu hình này (366 vi phạm slew).
+- Với fix3 vẫn còn 1.007 chân vượt ràng buộc 0,75 ns (`MAX_TRANSITION_CONSTRAINT`) ở corner xấu nhất, còn vi phạm max cap ở buffer gốc của cây clock (`clkbuf_0_clk`, 0,26 pF so với giới hạn 0,2 pF) và 71 vi phạm max fanout. `dma_ctrl` riêng lẻ chưa chạy lại với cấu hình này (366 vi phạm slew).
 - Luồng vật lý chưa gồm RAM; số liệu diện tích/công suất chỉ của lõi.
 - DMA một kênh, chỉ truyền nguyên word, không burst, chưa bắt tay với ngoại vi (chưa chép thẳng vào UART được).
 - Vòng polling STATUS tranh bus với DMA: chép 64 word giữ BUSY 494 chu kỳ khi CPU polling, 477 chu kỳ khi CPU đang tự chép dữ liệu.
