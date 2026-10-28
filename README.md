@@ -35,6 +35,7 @@ Phần FPGA dùng [OSS CAD Suite](https://github.com/YosysHQ/oss-cad-suite-build
 ```bash
 make lint                     # Verilator -Wall
 make test                     # lint + tb_dma + tb_soc, dừng nếu có FAIL
+make sim-gl                   # mô phỏng netlist sau tổng hợp (OpenLane, bản fix3) với model cell Sky130, khoảng 2 phút
 gtkwave soc.vcd               # dạng sóng toàn SoC
 make sim-dma && python3 scripts/gtkw_t5.py dump.vcd && gtkwave t5.gtkw   # mở sẵn ca T5
 make fpga                     # tổng hợp + P&R cho Tang Nano 20K, in tài nguyên và Fmax
@@ -82,6 +83,7 @@ Chép N word với cùng một firmware, đo bằng `rdcycle`. Số trên Tang N
 - CPU tốn khoảng 57 chu kỳ/word; DMA tốn 7,75 chu kỳ/word cộng 133 chu kỳ cố định cho cấu hình và chờ. Tăng tốc tiến tới 7,4 lần.
 - Độ trễ khởi động: 2 chu kỳ từ lúc BUSY lên đến giao dịch RAM đầu tiên của DMA.
 - Chạy đồng thời (DMA chép 64 word trong khi CPU tự chép 16 word): dữ liệu cả hai đều đúng. Trong mọi lúc DMA BUSY, CPU hoàn tất 599 giao dịch RAM, DMA 1.184 (= 2 × 592 word đã chép).
+- Mô phỏng netlist sau tổng hợp của `soc_core` (bản fix3, model chức năng của cell Sky130) chạy đúng firmware tới `CONC OK`: khoảng 202.000 chu kỳ, gần 2 phút trên Icarus.
 
 FPGA Tang Nano 20K (GW2AR-18), RAM 8 KB:
 

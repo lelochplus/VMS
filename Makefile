@@ -55,3 +55,15 @@ lint:
 > @echo "== LINT SACH =="
 
 .PHONY: lint
+
+# ---------------- Mô phỏng netlist sau tổng hợp (OpenLane, bản fix3) ----------------
+GL_NL  ?= openlane/runs/fix3/final/nl/soc_core.nl.v
+PDK_HD ?= $(shell find $(HOME)/.ciel $(HOME)/.volare -path '*sky130A/libs.ref/sky130_fd_sc_hd/verilog' -type d 2>/dev/null | head -1)
+GL_DIV ?= 434
+
+sim-gl: sw/fw.hex tb/tb_soc.v rtl/soc_top.v rtl/soc_periph.v $(GL_NL)
+> iverilog -g2012 -DGL -DFUNCTIONAL -DUNIT_DELAY=#1 -Ptb_soc.CLK_DIV=$(GL_DIV) -o obj_gl tb/tb_soc.v rtl/soc_top.v rtl/soc_periph.v $(GL_NL) $(PDK_HD)/primitives.v $(PDK_HD)/sky130_fd_sc_hd.v
+> vvp -n obj_gl | tee gl.log
+> grep -q "^PASS" gl.log
+
+.PHONY: sim-gl

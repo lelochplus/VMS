@@ -14,7 +14,11 @@ module soc_top #(
     wire [3:0]  ext_sel;
     wire [31:0] ext_adr, ext_dat_o, ext_dat_i;
 
+`ifdef GL
+    soc_core core (                    // netlist sau tổng hợp: CLK_DIV cố định lúc tổng hợp
+`else
     soc_core #(.CLK_DIV(CLK_DIV)) core (
+`endif
         .clk(clk), .rst(rst), .uart_tx(uart_tx), .trap(trap),
         .ext_cyc(ext_cyc), .ext_stb(ext_stb), .ext_we(ext_we),
         .ext_sel(ext_sel), .ext_adr(ext_adr), .ext_dat_o(ext_dat_o),
