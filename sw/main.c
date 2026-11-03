@@ -19,7 +19,9 @@
 #define ST_ERR      (1u << 2)
 
 #define N 16
+#ifndef PERF_N
 #define PERF_N 256
+#endif
 
 static uint32_t src_buf[N];
 static uint32_t dst_buf[N];
@@ -128,7 +130,11 @@ int main(void) {
     uart_puts(bad ? "CONC FAIL\n" : "CONC OK\n");
 
     // Đo hiệu năng: chép n word bằng CPU và bằng DMA (rdcycle, gồm cả cấu hình và chờ)
+#if PERF_N >= 256
     static const uint32_t sizes[] = {16, 32, 64, 128, 256};
+#else
+    static const uint32_t sizes[] = {16, 32, 64, 128};
+#endif
     uint32_t k, n, t0, t_cpu, t_dma;
     for (k = 0; k < sizeof sizes / sizeof sizes[0]; k++) {
         n = sizes[k];
