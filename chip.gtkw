@@ -1,0 +1,58 @@
+[dumpfile] "soc.vcd"
+@200
+-1. Clock, reset, UART
+@28
+TOP.tb_soc.clk
+TOP.tb_soc.rst
+TOP.tb_soc.uart_tx
+@200
+-2. CPU PicoRV32
+@22
+TOP.tb_soc.dut.core.cpu.picorv32_core.reg_pc[31:0]
+@28
+TOP.tb_soc.dut.core.cpu.picorv32_core.irq_active
+@200
+-3. Arbiter (use_dma = 1: DMA dang giu bus)
+@28
+TOP.tb_soc.dut.core.cpu_req
+TOP.tb_soc.dut.core.dma_req
+TOP.tb_soc.dut.core.use_dma
+@22
+TOP.tb_soc.dut.core.bus_adr[31:0]
+@28
+TOP.tb_soc.dut.core.bus_we
+TOP.tb_soc.dut.core.bus_ack
+@200
+-4. DMA
+@24
+TOP.tb_soc.dut.core.dma.st[2:0]
+@28
+TOP.tb_soc.dut.core.dma.busy
+TOP.tb_soc.dut.core.dma.done
+TOP.tb_soc.dut.core.dma.irq
+@22
+TOP.tb_soc.dut.core.dma.src[31:0]
+TOP.tb_soc.dut.core.dma.dst[31:0]
+@24
+TOP.tb_soc.dut.core.dma.len[31:0]
+@200
+-5. Bus ngoai -> ROM / SRAM
+@28
+TOP.tb_soc.dut.ext_cyc
+TOP.tb_soc.dut.ext_ack
+TOP.tb_soc.dut.sel_rom
+TOP.tb_soc.dut.sel_sram
+@22
+TOP.tb_soc.dut.ext_adr[31:0]
+TOP.tb_soc.dut.rom_q[31:0]
+@200
+-6. SRAM sram0 (cong 0)
+@28
+TOP.tb_soc.dut.sram0.clk0
+TOP.tb_soc.dut.sram0.csb0
+TOP.tb_soc.dut.sram0.web0
+@22
+TOP.tb_soc.dut.sram0.wmask0[3:0]
+TOP.tb_soc.dut.sram0.addr0[8:0]
+TOP.tb_soc.dut.sram0.din0[31:0]
+TOP.tb_soc.dut.sram0.dout0[31:0]
