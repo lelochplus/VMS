@@ -1,0 +1,67 @@
+{
+  "DESIGN_NAME": "soc_chip",
+  "VERILOG_FILES": [
+    "dir::../rtl/soc_chip.v",
+    "dir::../rtl/boot_rom.v",
+    "dir::../rtl/soc_core.v",
+    "dir::../rtl/soc_periph.v",
+    "dir::../rtl/dma_ctrl.v",
+    "dir::../third_party/picorv32/picorv32.v"
+  ],
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 25,
+  "PDK": "sky130A",
+  "FP_SIZING": "absolute",
+  "DIE_AREA": [
+    0,
+    0,
+    900,
+    900
+  ],
+  "MACROS": {
+    "sky130_sram_2kbyte_1rw1r_32x512_8": {
+      "instances": {
+        "sram0": {
+          "location": [
+            108.1,
+            432.48
+          ],
+          "orientation": "N"
+        }
+      },
+      "gds": [
+        "pdk_dir::libs.ref/sky130_sram_macros/gds/sky130_sram_2kbyte_1rw1r_32x512_8.gds"
+      ],
+      "lef": [
+        "pdk_dir::libs.ref/sky130_sram_macros/lef/sky130_sram_2kbyte_1rw1r_32x512_8.lef"
+      ],
+      "vh": [
+        "dir::../rtl/sram_bb.v"
+      ],
+      "lib": {
+        "*": [
+          "pdk_dir::libs.ref/sky130_sram_macros/lib/sky130_sram_2kbyte_1rw1r_32x512_8_TT_1p8V_25C.lib"
+        ]
+      }
+    }
+  },
+  "PDN_MACRO_CONNECTIONS": [
+    "sram0 VPWR VGND vccd1 vssd1"
+  ],
+  "DESIGN_REPAIR_MAX_WIRE_LENGTH": 400,
+  "DESIGN_REPAIR_MAX_SLEW_PCT": 30,
+  "DESIGN_REPAIR_MAX_CAP_PCT": 30,
+  "RUN_POST_GRT_DESIGN_REPAIR": true,
+  "GRT_DESIGN_REPAIR_MAX_WIRE_LENGTH": 400,
+  "GRT_DESIGN_REPAIR_MAX_SLEW_PCT": 20,
+  "GRT_DESIGN_REPAIR_MAX_CAP_PCT": 20,
+  "EXTRA_EXCLUDED_CELLS": [
+    "sky130_fd_sc_hd__buf_1",
+    "sky130_fd_sc_hd__clkdlybuf4s*",
+    "sky130_fd_sc_hd__dlygate4sd*"
+  ],
+  "PRIMARY_GDSII_STREAMOUT_TOOL": "klayout",
+  "MAGIC_DRC_MAGLEFS": [
+    "pdk_dir::libs.ref/sky130_sram_macros/maglef/sky130_sram_2kbyte_1rw1r_32x512_8.mag"
+  ]
+}
