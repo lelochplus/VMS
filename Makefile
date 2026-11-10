@@ -67,28 +67,3 @@ sim-gl: sw/fw.hex tb/tb_soc.v rtl/soc_top.v rtl/soc_periph.v $(GL_NL)
 > grep -q "^PASS" gl.log
 
 .PHONY: sim-gl
-
-# ---------------- Chip ASIC co RAM: ROM chua firmware + macro SRAM 2 KB ----------------
-sw/fw_asic.elf: sw/start.S sw/main.c sw/link_asic.ld
-> $(CC) $(CFLAGS) -DPERF_N=128 -T sw/link_asic.ld sw/start.S sw/main.c -o $@
-
-sw/fw_asic.bin: sw/fw_asic.elf
-> $(OBJCOPY) -O binary $< $@
-
-rtl/boot_rom.v: sw/fw_asic.bin scripts/gen_rom.py
-> python3 scripts/gen_rom.py $< $@
-
-rom: rtl/boot_rom.v
-
-.PHONY: rom
-
-SRAM_V   ?= $(shell find $(HOME)/.ciel $(HOME)/.volare -path '*sky130A/libs.ref/sky130_sram_macros/verilog/sky130_sram_2kbyte_1rw1r_32x512_8.v' 2>/dev/null | head -1)
-CHIP_RTL  = rtl/soc_chip.v rtl/boot_rom.v rtl/soc_core.v rtl/soc_periph.v rtl/dma_ctrl.v $(PICO)
-
-sim-chip: rtl/boot_rom.v tb/tb_soc.v $(CHIP_RTL)
-> @test -n "$(SRAM_V)" || { echo "Khong tim thay model SRAM trong PDK: chay make sim-chip SRAM_V=<duong dan file .v>"; exit 1; }
-> verilator --binary --timing --trace --timescale 1ns/1ps -Wno-fatal -DCHIP -DSIM --Mdir obj_chip $(CHIP_RTL) $(SRAM_V) tb/tb_soc.v --top-module tb_soc
-> ./obj_chip/Vtb_soc | tee chip.log
-> grep -q "^PASS" chip.log
-
-.PHONY: sim-chip

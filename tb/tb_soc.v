@@ -8,22 +8,9 @@ module tb_soc;
 
     wire uart_tx, trap;
 
-`ifdef CHIP     // chip ASIC: ROM + macro SRAM (make sim-chip)
-`ifdef GL
-    soc_chip dut (
-`else
-    soc_chip #(.CLK_DIV(CLK_DIV)) dut (
-`endif
-        .clk(clk), .rst(rst), .uart_tx(uart_tx), .trap(trap)
-    );
-`ifdef GL
-    defparam dut.sram0.VERBOSE = 0;              // tat thong bao cua model SRAM (ban RTL: xem soc_chip.v)
-`endif
-`else
     soc_top #(.RAM_WORDS(2048), .CLK_DIV(CLK_DIV), .FW_HEX("sw/fw")) dut (
         .clk(clk), .rst(rst), .uart_tx(uart_tx), .trap(trap)
     );
-`endif
 
     // Chuỗi mong đợi (33 ký tự), firmware kết thúc bằng byte 0x04 (EOT)
     localparam NEXP = 41;

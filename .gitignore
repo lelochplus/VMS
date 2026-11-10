@@ -18,6 +18,3 @@ t5.gtkw
 fsm_state.txt
 dma_reg.txt
 obj_gl
-sw/fw_asic.elf
-sw/fw_asic.bin
-obj_chip/
